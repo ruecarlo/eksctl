@@ -6,7 +6,7 @@ url: gitops-quickstart/setup-gitops
 
 # Setup your cluster with GitOps
 
-Welcome to eksctl GitOps Quick Starts. This will allow you to launch
+Welcome to `eksctl` GitOps Quick Starts. This will allow you to launch
 fully-configured Kubernetes clusters that are ready to run production
 workloads in minutes: easy for you to get started running Kubernetes
 on EKS and to launch standard clusters in your organisation.
@@ -64,8 +64,6 @@ tweak it for your purposes. In essence it is going to be a variation of:
 eksctl create cluster
 ```
 
-The process will take a couple of minutes.
-
 Once it is finished, you should be able to check the cluster contents and
 see some system workloads:
 
@@ -122,16 +120,16 @@ values can work (e.g. `alb-ingress`).
 1. `eksctl install flux`
 1. `eksctl generate config`
 
-So for more complex use cases, you will want to run these separately and
-on your own and adjust as necessary. The first command installs Flux and
-links it to a git repo that you provide. The second generates the config
-files from the GitOps Quick Start profile locally, so that you can edit
-them before pushing to your git repo.
+So for more complex use cases, you will want to run these steps
+separately and on your own and adjust flags and options as necessary. The
+first command installs Flux and links it to a git repo that you provide.
+The second generates the config files from the GitOps Quick Start profile
+locally, so that you can edit them before pushing to your git repo.
 
 ### Configuring Flux
 
-This command will install [Flux](https://github.com/fluxcd/flux), the
-Kubernetes GitOps operator in your cluster.
+Here we will install [Flux](https://fluxcd.io), the Kubernetes GitOps
+operator in your cluster. It will take care of deployments for you.
 
 ```console
 EKSCTL_EXPERIMENTAL=true eksctl install flux \
@@ -140,8 +138,8 @@ EKSCTL_EXPERIMENTAL=true eksctl install flux \
     --name <cluster-name>
 ```
 
-Additional options are explained in our docs on [`install
-flux`](/usage/experimental/gitops-flux/).
+Additional options to the command are explained in our docs on
+[`install flux`](/usage/experimental/gitops-flux/).
 
 After about a minute your cluster will have `flux` running, which will
 monitor your git repository once you added a deploy key to e.g. Github.
@@ -248,7 +246,7 @@ kubernetes-dashboard   kubernetes-dashboard-7447f48f55-2pl66       1/1     Runni
 All of the cluster configuration can be easily edited in git now.
 Welcome to a fully GitOpsed world!
 
-- xxx: How a user can create their own QuickStart style repo and give
+- xxx: creating your own QuickStart style repo and give
   that as an argument to eksctl gitops apply or eksctl generate config
 
 ## Conclusion
