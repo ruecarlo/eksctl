@@ -6,23 +6,22 @@ url: gitops-quickstart/setup-gitops
 
 # Setup your cluster with GitOps
 
-Welcome to eksctl GitOps Quick Starts. This will allow you to launch a
-fully-configured Kubernetes clusters that is ready to run production
-workloads in minutes. This will make it easy for you to get started
-running Kubernetes on EKS and to launch standard clusters in your
-organisation.
+Welcome to eksctl GitOps Quick Starts. This will allow you to launch
+fully-configured Kubernetes clusters that are ready to run production
+workloads in minutes: easy for you to get started running Kubernetes
+on EKS and to launch standard clusters in your organisation.
 
-At the end of this guide, you will have a fully-configured Kubernetes
-cluster including control plane, worker nodes, and all of the software
-needed for code deployment, monitoring, and logging.
+At the end of this guide, you will have a Kubernetes cluster including
+control plane, worker nodes, and all of the software needed for code
+deployment, monitoring, and logging.
 
 ## Quick Start to GitOps
 
 [GitOps][gitops] is a way to do Kubernetes application delivery. It
-works by using Git as a single source of truth for Kubernetes resources.
-With Git at the center of your delivery pipelines, you and your team can
-make pull requests to accelerate and simplify application deployments
-and operations tasks to Kubernetes.
+works by using Git as a single source of truth for Kubernetes resources
+and everything else. With Git at the center of your delivery pipelines,
+you and your team can make pull requests to accelerate and simplify
+application deployments and operations tasks to Kubernetes.
 
 [gitops]: https://www.weave.works/technologies/gitops/
 
@@ -58,10 +57,11 @@ _empty_ repository. On Github for example, follow [these steps][github-repo].
 ## Standing up your cluster
 
 First we follow the [usual steps](/introduction/getting-started/) to stand
-up a cluster on EKS. In essence it is going to be a variation of:
+up a cluster on EKS. Please review the list of flags to see if you need to
+tweak it for your purposes. In essence it is going to be a variation of:
 
-```sh
-EKSCTL_EXPERIMENTAL=true eksctl create cluster
+```console
+eksctl create cluster
 ```
 
 The process will take a couple of minutes.
@@ -69,7 +69,7 @@ The process will take a couple of minutes.
 Once it is finished, you should be able to check the cluster contents and
 see some system workloads:
 
-```sh
+```console
 $ kubectl get pods --all-namespaces
 NAMESPACE     NAME                      READY   STATUS    RESTARTS   AGE
 kube-system   aws-node-cl5t5            1/1     Running   0          1m
@@ -95,18 +95,18 @@ in the configuration they will be reflected on your cluster.
 > Experimental features are not stable and their command name and flags
 > may change.
 
-```sh
+```console
 EKSCTL_EXPERIMENTAL=true eksctl \
         gitops apply app-dev-profile \
         git-url=https://github.com/example/my-eks-config
 ```
 
+- xxx: What will be installed on the cluster as part of this command
+
 This will set up Flux on their cluster and load GitOps Quick Start config
 files into your repo. It will use templating to add your cluster name and
 region to the configuration so that key cluster components that need those
 values can work (e.g. `alb-ingress`).
-
-- xxx: What will be installed on the cluster as part of this command
 
 ## Your GitOps cluster
 
@@ -122,18 +122,18 @@ values can work (e.g. `alb-ingress`).
 1. `eksctl install flux`
 1. `eksctl generate config`
 
-So for more complex use cases, you will want to run these on your own
-and modify as you see fit. The first command installs Flux and links it
-to a git repo that you provide. The second generates the config files
-from the GitOps Quick Start profile locally, so that you can edit them
-before pushing to your git repo.
+So for more complex use cases, you will want to run these separately and
+on your own and adjust as necessary. The first command installs Flux and
+links it to a git repo that you provide. The second generates the config
+files from the GitOps Quick Start profile locally, so that you can edit
+them before pushing to your git repo.
 
 ### Configuring Flux
 
 This command will install [Flux](https://github.com/fluxcd/flux), the
 Kubernetes GitOps operator in your cluster.
 
-```sh
+```console
 EKSCTL_EXPERIMENTAL=true eksctl install flux \
     --git-url <git-url> \
     --git-email <email-of-committer> \
