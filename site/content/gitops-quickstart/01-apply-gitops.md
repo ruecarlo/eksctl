@@ -182,8 +182,72 @@ discussed in our [`install flux` docs](/usage/experimental/gitops-flux/).
 
 ### Handcrafting your configuration
 
-- xxx: How a user can use eksctl generate config to generate and edit
-  the config locally before they manually push to the repo
+In this second step we will use `eksctl generate config`, so you can
+easily handcraft your cluster configuration and maintain it in Git, just
+like you would for the workloads you are running.
+
+During the previous command (`eksctl install flux`), we instructed Flux
+to watch a config repository. This is where the workloads are defined.
+Now we will add the cluster config as well.
+
+In this example we will run:
+
+```console
+EKSCTL_EXPERIMENTAL=true eksctl generate profile \
+        --name wonderful-wardrobe-1565767990 \
+        --git-url git@github.com:happy-gopher/eks-gitops-example.git \
+        --profile-path ~/dev/flux-get-started/cluster-config
+```
+
+Let's break this down here. `eksctl generate profile` at the very
+least wants:
+
+- `--name`: the name of the cluster - check `eksctl get cluster`
+  to see what the name of yours is
+- `--git-url`: the Git URL of the base config of your cluster
+- `--profile-path`: a local path: this is an empty new directory
+  (here `cluster-config`) you create in your local checkout of
+  the config repository, which we used in the previous command
+
+The base config can be something you and your organisation
+tailored to your needs, but can be something like our [EKS
+GitOps example][eks-gitops-example] as well. It is meant to be
+a starting point for clusters you can iterate over.
+
+[eks-gitops-example]: https://github.com/weaveworks/eks-gitops-example
+
+Check `XXX` for a description of all the flags and options -
+blocked on <https://github.com/weaveworks/eksctl/pull/1140>.
+
+So after all this preface, what happens when we run the command?
+`eksctl` will check out the base-config (here we use a fork of the
+GitOps example config) in an empty sub-directory (`cluster-config`)
+of our local checkout of our `flux-get-started` fork.
+
+All that is left now to get our cluster components managed by Flux
+is to commit them to our config repository:
+
+```console
+cd ~/dev/flux-get-started/cluster-config
+git add .
+git commit -m "add cluster config"
+git push
+```
+
+Flux will pick this up in its next sync and make the changes to your
+cluster.
+
+In our case we are going to see these new arrivals in the cluster:
+
+```console
+kubectl get pods -n kubernetes-dashboard
+kubernetes-dashboard   dashboard-metrics-scraper-f7b5dbf7d-kwz7n   1/1     Running   0          4m
+kubernetes-dashboard   kubernetes-dashboard-7447f48f55-2pl66       1/1     Running   0          4m
+```
+
+All of the cluster configuration can be easily edited in git now.
+Welcome to a fully GitOpsed world!
+
 - xxx: How a user can create their own QuickStart style repo and give
   that as an argument to eksctl gitops apply or eksctl generate config
 
