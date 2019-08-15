@@ -101,7 +101,7 @@ EKSCTL_EXPERIMENTAL=true eksctl \
 
 - xxx: What will be installed on the cluster as part of this command
 
-This will set up Flux on their cluster and load GitOps Quick Start config
+This will set up Flux on your cluster and load GitOps Quick Start config
 files into your repo. It will use templating to add your cluster name and
 region to the configuration so that key cluster components that need those
 values can work (e.g. `alb-ingress`).
@@ -143,6 +143,10 @@ Additional options to the command are explained in our docs on
 
 After about a minute your cluster will have `flux` running, which will
 monitor your git repository once you added a deploy key to e.g. Github.
+
+The Flux Helm operator and Tiller will be deployed in your cluster
+too at this point. (XXX: pending
+<https://github.com/weaveworks/eksctl/pull/1136>).
 
 This key can be found at the end of the output of the command, this
 might for example be:
