@@ -96,12 +96,12 @@ in the configuration they will be reflected on your cluster.
 ```console
 EKSCTL_EXPERIMENTAL=true eksctl \
         gitops apply app-dev-profile \
-        git-url=https://github.com/example/my-eks-config
+        git-url=git@github.com/example/my-eks-config.git
 ```
 
 - xxx: What will be installed on the cluster as part of this command
 
-This will set up Flux on your cluster and load GitOps Quick Start config
+This will set up [Flux](https://fluxcd.io) on your cluster and load GitOps Quick Start config
 files into your repo. It will use templating to add your cluster name and
 region to the configuration so that key cluster components that need those
 values can work (e.g. `alb-ingress`).
@@ -118,7 +118,7 @@ values can work (e.g. `alb-ingress`).
 `eksctl gitops apply` can largely be decomposed into
 
 1. `eksctl install flux`
-1. `eksctl generate config`
+1. `eksctl generate profile`
 
 So for more complex use cases, you will want to run these steps
 separately and on your own and adjust flags and options as necessary. The
@@ -143,7 +143,7 @@ Additional options to the command are explained in our docs on
 
 After about a minute your cluster will have `flux` running, which will
 monitor your git repository once you added a deploy key to e.g. Github.
-The Flux Helm operator and Tiller will be deployed in your cluster
+The Helm operator and Tiller will be deployed in your cluster
 too.
 
 This key can be found at the end of the output of the command, this
@@ -195,7 +195,7 @@ In this example we will run:
 ```console
 EKSCTL_EXPERIMENTAL=true eksctl generate profile \
         --name wonderful-wardrobe-1565767990 \
-        --git-url git@github.com:happy-gopher/eks-gitops-example.git \
+        --git-url git@github.com:weaveworks/eks-quickstart-app-dev.git \
         --profile-path ~/dev/flux-get-started/cluster-config
 ```
 
