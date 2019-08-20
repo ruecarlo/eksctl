@@ -99,6 +99,8 @@ EKSCTL_EXPERIMENTAL=true eksctl \
         git-url=git@github.com/example/my-eks-config.git
 ```
 
+XXX: This is blocked on <https://github.com/weaveworks/eksctl/pull/1165>.
+
 - xxx: What will be installed on the cluster as part of this command
 
 This will set up [Flux](https://fluxcd.io) on your cluster and load GitOps Quick Start config
