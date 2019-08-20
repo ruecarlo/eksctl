@@ -151,12 +151,17 @@ might for example be:
 
 ```console
 $ EKSCTL_EXPERIMENTAL=true eksctl install flux \
-    --git-url git@github.com:happy-gopher/flux-get-started \
-    --git-email happy@gopher.org \
+    --git-url git@github.com:YOURUSER/flux-get-started \
+    --git-email your@email.org \
     --name wonderful-wardrobe-1565767990
+```
+
+The output should look like this:
+
+```console
 [...]
 [ℹ]  Flux will only operate properly once it has write-access to the Git repository
-[ℹ]  please configure git@github.com:happy-gopher/flux-get-started so that the following Flux SSH public key has write access to it
+[ℹ]  please configure git@github.com:YOURUSER/flux-get-started so that the following Flux SSH public key has write access to it
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCt8no0/F3+kD1YukH6sVIv1ONcy9+01G2/AQe1CQA+uRHaioep41U3ghROU7CoM1yTjG+eLYgu26UMvkXVbOmEm+1697adh4qz/yCF0E7JtCIIXGn/1XrLb6OxgtlGKdJ4fTUdxtQSyTvWqjxQhC4ute9hnHWU8oiSrNaq5D20P5x8sgPf4V0A5YWD5S4YliJcIupTzrD7zjhh6TyP5fqhPLHPBZFHStHq0DSD+Gi6vXZz1s9UmuAnxP8pkIlrW22xJyFbsmcjJuks5FvmLo8uJMeWTx5t+3WKWp8ZKrbDJFUWQ8aVMByHYq1c3doevM28CHwz/
 ```
 
@@ -186,9 +191,9 @@ In this second step we will use `eksctl generate config`, so you can
 easily handcraft your cluster configuration and maintain it in Git, just
 like you would for the workloads you are running.
 
-During the previous command (`eksctl install flux`), we instructed Flux
+During the previous call (`eksctl install flux`), we instructed Flux
 to watch a config repository. This is where the workloads are defined.
-Now we will add the cluster config as well.
+Now we will add the config of the infrastructure tooling as well.
 
 In this example we will run:
 
@@ -216,13 +221,15 @@ a starting point for clusters you can iterate over.
 
 [eks-gitops-example]: https://github.com/weaveworks/eks-gitops-example
 
+XXX: `eks-gitops-example` to be renamed to `eks-quickstart-app-dev`.
+
 Check `XXX` for a description of all the flags and options -
 blocked on <https://github.com/weaveworks/eksctl/pull/1140>.
 
 So after all this preface, what happens when we run the command?
-`eksctl` will check out the base-config (here we use a fork of the
+`eksctl` will check out the base-config (here we use a copy of the
 GitOps example config) in an empty sub-directory (`cluster-config`)
-of our local checkout of our `flux-get-started` fork.
+of our local checkout of `flux-get-started`.
 
 All that is left now to get our cluster components managed by Flux
 is to commit them to our config repository:
