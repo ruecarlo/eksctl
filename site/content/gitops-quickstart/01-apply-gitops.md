@@ -187,20 +187,23 @@ discussed in our [`install flux` docs](/usage/experimental/gitops-flux/).
 
 ### Handcrafting your configuration
 
-In this second step we will use `eksctl generate config`, so you can
+In this second step we will use `eksctl generate profile`, so you can
 easily handcraft your cluster configuration and maintain it in Git, just
 like you would for the workloads you are running.
 
 During the previous call (`eksctl install flux`), we instructed Flux
-to watch a config repository. This is where the workloads are defined.
-Now we will add the config of the infrastructure tooling as well.
+to watch a config repository and deploy changes to the cluster. This
+config repository is where the workloads are defined. Now we will add
+the config of the infrastructure tooling as well.
 
-In this example we will run:
+In this example we will use `weaveworks/eks-gitops-example` as a
+base config for the infrastructure tooling. If you have your own, feel
+free to use that instead. Then run:
 
 ```console
 EKSCTL_EXPERIMENTAL=true eksctl generate profile \
         --name wonderful-wardrobe-1565767990 \
-        --git-url git@github.com:weaveworks/eks-quickstart-app-dev.git \
+        --git-url git@github.com:weaveworks/eks-gitops-example.git \
         --profile-path ~/dev/flux-get-started/cluster-config
 ```
 
@@ -256,7 +259,7 @@ All of the cluster configuration can be easily edited in git now.
 Welcome to a fully GitOpsed world!
 
 - xxx: creating your own QuickStart style repo and give
-  that as an argument to eksctl gitops apply or eksctl generate config
+  that as an argument to eksctl gitops apply or eksctl generate profile
 
 ## Conclusion
 
