@@ -145,7 +145,7 @@ Additional options to the command are explained in our docs on
 
 After about a minute your cluster will have `flux` running, which will
 monitor your git repository once you added a deploy key to e.g. Github.
-The Helm operator and Tiller will be deployed in your cluster
+The [Flux Helm Operator](https://github.com/fluxcd/helm-operator)) and Tiller will be deployed in your cluster
 too.
 
 This key can be found at the end of the output of the command, this
