@@ -6,14 +6,14 @@ url: gitops-quickstart/setup-gitops
 
 # Setup your cluster with GitOps
 
-Welcome to `eksctl` GitOps Quick Starts. This will allow you to launch
-fully-configured Kubernetes clusters that are ready to run production
-workloads in minutes: easy for you to get started running Kubernetes
-on EKS and to launch standard clusters in your organisation.
+Welcome to `eksctl` GitOps Quick Starts. In this guide we will show you
+how to launch fully-configured Kubernetes clusters that are ready to
+run production workloads in minutes: easy for you to get started running
+Kubernetes on EKS and to launch standard clusters in your organisation.
 
-At the end of this guide, you will have a Kubernetes cluster including
-control plane, worker nodes, and all of the software needed for code
-deployment, monitoring, and logging.
+At the end of this, you will have a Kubernetes cluster including control
+plane, worker nodes, and all of the software needed for code deployment,
+monitoring, and logging.
 
 ## Quick Start to GitOps
 
@@ -93,20 +93,83 @@ in the configuration they will be reflected on your cluster.
 > Experimental features are not stable and their command name and flags
 > may change.
 
-```console
-EKSCTL_EXPERIMENTAL=true eksctl \
-        gitops apply app-dev-profile \
-        git-url=git@github.com/example/my-eks-config.git
-```
-
 XXX: This is blocked on <https://github.com/weaveworks/eksctl/pull/1165>.
 
-- xxx: What will be installed on the cluster as part of this command
+```console
+EKSCTL_EXPERIMENTAL=true eksctl \
+        gitops apply \
+        --quickstart-profile app-dev \
+        --git-url=git@github.com/example/my-eks-config.git \
+        --output-path ~/dev/flux-get-started/infra-config/ \
+        --git-url git@github.com:YOURUSER/eks-gitops-example.git
+```
 
-This will set up [Flux](https://fluxcd.io) on your cluster and load GitOps Quick Start config
-files into your repo. It will use templating to add your cluster name and
-region to the configuration so that key cluster components that need those
-values can work (e.g. `alb-ingress`).
+XXX: How to see which quickstart profiles are available?
+
+Let us go through the specified arguments one by one:
+
+- `--quickstart-profile`: this is the name of one of the profiles we
+  put together, so you can easily pick and choose and will not have
+  to start from scratch every time. Use `app-dev` for now.
+- `--git-url`: this points to a Git URL where the configuration for
+  your cluster will be stored. This will contain config for the
+  workloads and infrastructure later on.
+- `--output-path`: specifies the path to your local checkout of
+  above git repo, add an empty directory in there, where the
+  infrastructure config can be stored. Above we added `infra-config`
+  as an empty directory.
+
+There are more arguments and options, please refer to XXX: link to
+reference doc for `gitops apply`.
+
+The command will take a while to run and it's a good idea to scan
+the output. You will note a similar bit of information in the log
+like this one:
+
+```console
+[ℹ]  Flux will only operate properly once it has write-access to the Git repository
+[ℹ]  please configure git@github.com:YOURUSER/eks-gitops-example.git so that the following Flux SSH public key has write access to it
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8msUDG9tEEWHKKJw1o8BpwfMkCvCepeUSMa9iTVK6Bmxeu2pA/ivBS8Qgx/Lg8Jnu4Gk2RbXYMt3KL3/lcIezLwqipGmVvLgBLvUccbBpeUpWt+SlW2LMwcMOnhF3n86VOYjaRPggoPtWfLhFIfnkvKOFLHPRYS3nqyYspFeCGUmOzQim+JAWokf4oGOOX4SNzRKjusboh93oy8fvWk8SrtSwLBWXOKu+kKXC0ecZJK7G0jW91qb40QvB+VeSAbfk8LJZcXGWWvWa3W0/woKzGNWBPZz+pGuflUjVwQG5GoOq5VVWu71gmXoXBS3bUNqlu6nDobd2LlqiXNViaszX
+```
+
+Copy the lines starting with `ssh-rsa` and add it as a deploy key, to
+e.g. Github. There you can easily do this in the
+`Settings > Deploy keys > Add deploy key`. Just make sure you check
+`Allow write access` as well.
+
+The next time Flux syncs from git, it will start updating the cluster
+and actively deploying.
+
+XXX: What is installed on the cluster as part of `app-dev`?
+
+This will set up [Flux](https://fluxcd.io) on your cluster and load GitOps
+Quick Start config files into your repo. It will use templating to add your
+cluster name and region to the configuration so that key cluster components
+that need those values can work (e.g. `alb-ingress`).
+
+All that is left now to get our cluster components managed by Flux
+is to commit them to our config repository:
+
+```console
+cd ~/dev/flux-get-started/infra-config
+git add .
+git commit -m "add infra config"
+git push
+```
+
+Flux will pick this up in its next sync and make the changes to your
+cluster.
+
+In our case we are going to see these new arrivals in the cluster:
+
+```console
+kubectl get pods -n kubernetes-dashboard
+kubernetes-dashboard   dashboard-metrics-scraper-f7b5dbf7d-kwz7n   1/1     Running   0          4m
+kubernetes-dashboard   kubernetes-dashboard-7447f48f55-2pl66       1/1     Running   0          4m
+```
+
+All of the cluster configuration can be easily edited in git now.
+Welcome to a fully GitOpsed world!
 
 ## Your GitOps cluster
 
