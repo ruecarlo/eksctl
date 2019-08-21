@@ -101,7 +101,8 @@ EKSCTL_EXPERIMENTAL=true eksctl \
         --quickstart-profile app-dev \
         --git-url=git@github.com/example/my-eks-config.git \
         --output-path ~/dev/flux-get-started/infra-config/ \
-        --git-url git@github.com:YOURUSER/eks-gitops-example.git
+        --git-url git@github.com:YOURUSER/eks-gitops-example.git \
+        --cluster your-cluster-name
 ```
 
 XXX: How to see which quickstart profiles are available?
@@ -118,6 +119,8 @@ Let us go through the specified arguments one by one:
   above git repo, add an empty directory in there, where the
   infrastructure config can be stored. Above we added `infra-config`
   as an empty directory.
+- `cluster`: the name of your cluster. Use `eksctl get cluster`
+  to see all clusters in your default region.
 
 There are more arguments and options, please refer to XXX: link to
 reference doc for `gitops apply`.
