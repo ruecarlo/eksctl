@@ -7,3 +7,5 @@ LICENSE.*
 skaffold.yaml
 eksctl
 eksctl-integration-test
+.gopath
+.vscode
