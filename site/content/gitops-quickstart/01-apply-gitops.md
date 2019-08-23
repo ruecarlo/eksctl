@@ -93,8 +93,6 @@ in the configuration they will be reflected on your cluster.
 > Experimental features are not stable and their command name and flags
 > may change.
 
-XXX: This is blocked on <https://github.com/weaveworks/eksctl/pull/1165>.
-
 ```console
 EKSCTL_EXPERIMENTAL=true eksctl \
         gitops apply \
