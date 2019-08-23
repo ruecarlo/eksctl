@@ -1,14 +1,30 @@
 built_at := $(shell date +%s)
 git_commit := $(shell git describe --dirty --always)
+
 git_toplevel := $(shell git rev-parse --show-toplevel)
 version_pkg := github.com/weaveworks/eksctl/pkg/version
 
-# The dependencies version should be bumped every time the build dependencies are updated
-EKSCTL_DEPENDENCIES_IMAGE ?= weaveworks/eksctl-build:deps-0.13
-EKSCTL_BUILDER_IMAGE ?= weaveworks/eksctl-builder:latest
-EKSCTL_IMAGE ?= weaveworks/eksctl:latest
+build_image_input := Dockerfile install-build-deps.sh go.mod go.sum
 
-GOBIN ?= $(shell echo `go env GOPATH`/bin)
+build_image_tag := $(shell git ls-tree --full-tree @ -- build_image.sum | awk '{ print $$3 }')
+
+build_image_name := weaveworks/eksctl-build:$(build_image_tag)
+build_container_name := $(shell printf "eksctl-build-%s-%s-%s" `git rev-parse @` $(build_image_tag) `date +%s`)
+intermediate_image_name := weaveworks/eksctl:$(git_commit)
+eksctl_image_name ?= weaveworks/eksctl:latest
+
+gopath := $(shell go env GOPATH)
+gocache := $(shell go env GOCACHE)
+
+docker_build := env DOCKER_BUILDKIT=1 time docker build
+
+GOBIN ?= $(gopath)/bin
+
+ifeq ($(OS),Windows_NT)
+TEST_TARGET=unit-test
+else
+TEST_TARGET=test
+endif
 
 AWS_SDK_MOCKS := $(wildcard pkg/eks/mocks/*API.go)
 
@@ -98,7 +114,7 @@ integration-test-container-pre-built: ## Run the integration tests inside a Dock
 	  --volume=$(HOME)/.aws:/root/.aws \
 	  --volume=$(HOME)/.ssh:/root/.ssh \
 	  --workdir=/usr/local/share/eksctl \
-	    $(EKSCTL_IMAGE) \
+	    $(eksctl_image_name) \
 		  eksctl-integration-test \
 		    -eksctl.path=/usr/local/bin/eksctl \
 			-eksctl.kubeconfig=/tmp/kubeconfig \
@@ -151,7 +167,7 @@ pkg/nodebootstrap/assets.go: pkg/nodebootstrap/assets/*
 DEEP_COPY_DEPS := $(shell $(call godeps_cmd,./pkg/apis/...) | sed 's|$(DEEP_COPY_HELPER)||' )
 $(DEEP_COPY_HELPER): $(DEEP_COPY_DEPS) .license-header ## Generate Kubernetes API helpers
 	time go mod download k8s.io/code-generator # make sure the code-generator is present
-	time env GOPATH="$$(go env GOPATH)" bash "$$(go env GOPATH)/pkg/mod/k8s.io/code-generator@v0.0.0-20190612205613-18da4a14b22b/generate-groups.sh" \
+	time env GOPATH="$(gopath)" bash "$(gopath)/pkg/mod/k8s.io/code-generator@v0.0.0-20190612205613-18da4a14b22b/generate-groups.sh" \
 	  deepcopy,defaulter _ ./pkg/apis eksctl.io:v1alpha5 --go-header-file .license-header --output-base="$(git_toplevel)" \
 	  || (cat codegenheader.txt ; cat $(DEEP_COPY_HELPER); exit 1)
 
@@ -167,35 +183,44 @@ site/content/usage/20-schema.md: $(call godeps,cmd/schema/generate.go)
 $(AWS_SDK_MOCKS): $(call godeps,pkg/eks/mocks/mocks.go)
 	mkdir -p vendor/github.com/aws/
 	@# Hack for Mockery to find the dependencies handled by `go mod`
-	ln -sfn "$$(go env GOPATH)/pkg/mod/github.com/aws/aws-sdk-go@v1.19.18" vendor/github.com/aws/aws-sdk-go
+	ln -sfn "$(gopath)/pkg/mod/github.com/aws/aws-sdk-go@v1.19.18" vendor/github.com/aws/aws-sdk-go
 	time env GOBIN=$(GOBIN) go generate ./pkg/eks/mocks
 
 ##@ Docker
 
-ifeq ($(OS),Windows_NT)
-TEST_TARGET=unit-test
-else
-TEST_TARGET=test
-endif
+.PHONY: update-build-image
+update-build-image:
+	git ls-tree --full-tree @ -- $(build_image_input) > build_image.sum
+	git commit --quiet build_image.sum --message 'Update build_image.sum'
 
-.PHONY: eksctl-deps-image
-eksctl-deps-image: ## Create a cache image with dependencies
-	-time docker pull $(EKSCTL_DEPENDENCIES_IMAGE)
-	@# Pin dependency file permissions.
-	@# Docker uses the file permissions as part of the COPY hash, which can lead to cache misses
-	@# in hosts with different default file permissions (umask).
-	chmod 0700 install-build-deps.sh
-	chmod 0600 go.mod go.sum
-	time docker build --cache-from=$(EKSCTL_DEPENDENCIES_IMAGE) --tag=$(EKSCTL_DEPENDENCIES_IMAGE) -f Dockerfile.deps .
+.PHONY: build-image
+build-image:
+	-docker pull $(build_image_name)
+	tar c $(build_image_input) \
+		| $(docker_build) \
+			--cache-from=$(build_image_name) \
+			--tag=$(build_image_name) \
+			--file=Dockerfile -
+
+.PHONY: intermediate-image
+intermediate-image: build-image
+	time docker run \
+			--tty \
+			--name=$(build_container_name) \
+			--env=TEST_TARGET=$(TEST_TARGET) \
+			--volume=$(git_toplevel):/src \
+			--volume=$(gocache):/root/.cache/go-build \
+			--volume=$(gopath)/pkg/mod:/go/pkg/mod \
+	        $(build_image_name) /src/eksctl-image-builder.sh \
+		|| ( docker rm $(build_container_name) ; exit 1 )
+	time docker commit $(build_container_name) $(intermediate_image_name) \
+		&& docker rm $(build_container_name)
 
 .PHONY: eksctl-image
-eksctl-image: eksctl-deps-image## Create the eksctl image
-	time docker run -t --name eksctl-builder -e TEST_TARGET=$(TEST_TARGET) \
-	  -v "$(git_toplevel)":/src -v "$$(go env GOCACHE):/root/.cache/go-build" -v "$$(go env GOPATH)/pkg/mod:/go/pkg/mod" \
-          $(EKSCTL_DEPENDENCIES_IMAGE) /src/eksctl-image-builder.sh || ( docker rm eksctl-builder; exit 1 )
-	time docker commit eksctl-builder $(EKSCTL_BUILDER_IMAGE) && docker rm eksctl-builder
-	docker build --tag $(EKSCTL_IMAGE) .
-
+eksctl-image: intermediate-image ## Create the eksctl image
+	printf 'FROM scratch\nCMD eksctl\nCOPY --from=%s /out /' $(intermediate_image_name) \
+		| $(docker_build) \
+			--tag="$(eksctl_image_name)" -
 
 ##@ Release
 
@@ -205,7 +230,7 @@ docker_run_release_script = docker run \
   --env=CIRCLE_PROJECT_USERNAME \
   --volume=$(CURDIR):/src \
   --workdir=/src \
-    $(EKSCTL_BUILDER_IMAGE)
+    $(intermediate_image_name)
 
 .PHONY: release-candidate
 release-candidate: eksctl-image ## Create a new eksctl release candidate
